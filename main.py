@@ -11,5 +11,9 @@ parser = Parser(argv[1])
 
 while parser.has_more_commands():
     parser.advance()
-    print(parser.current_command)
-
+    print(f"Current command: {parser.current_command}")
+    parser.command_type()
+    print(f"Current command type: {parser.current_command_type}")
+    if parser.current_command_type == "A" or parser.current_command_type == "L":
+        parser.symbol()
+        print(f"Current command content: {parser.current_command_content}")

@@ -3,6 +3,9 @@ The parser module exports the Parser class.
 
 Parser class: Opens XHAL .asm files and breaks XHAL assembly commands into their underlying fields and symbols.
 """
+import re
+
+# TODO: Currently setting instance variables instead of returning them. Cool? May want to change descriptions.
 
 
 class Parser:
@@ -22,6 +25,11 @@ class Parser:
     jump: Returns the jump mnemonic in the current C_Command.
     """
 
+    # Initialize all regular expressions for the parser.
+    regex_a_command = re.compile(r'^@', flags=re.MULTILINE)
+    regex_c_command = re.compile(r'(^[ADM]=)|(^MD=)|(^AM=)|(^AD=)|(^AMD=)|(^\d;J)', flags=re.MULTILINE)
+    regex_l_command = re.compile(r'(^\().*(\)$)')
+
     # TODO: May need to add arguments to some or all of the below methods.
 
     def __init__(self, input_file):
@@ -31,7 +39,7 @@ class Parser:
         Arguments:
         input_file: The XHAL .asm file to be parsed and translated into a .hack pseudo-binary machine language file.
         """
-        print(f"Parsing file {input_file}\n")
+        print(f"Parsing file {input_file}....\n")
 
         # Open the file for parsing, and save the text as a list where each element is a line.
         with open(input_file, 'r') as file:
@@ -43,6 +51,10 @@ class Parser:
         self.command_idx = 0
 
         self.current_command = None
+
+        self.current_command_type = None
+
+        self.current_command_content = None
 
     def has_more_commands(self):
         """Detect if there are more commands in the XHAL .asm input file. Return true if there are, and false
@@ -65,12 +77,26 @@ class Parser:
         C_Command: Compute commands in the form of dest=comp;jump
         L_Command: A pseudo-command in the form of (XXX), where XXX is a symbol.
         """
-        pass
+        # Detect the current command type and set it based on the class-level compiled regular expressions.
+        if self.regex_a_command.match(self.current_command):
+            self.current_command_type = "A"
+        elif self.regex_c_command.match(self.current_command):
+            self.current_command_type = "C"
+        elif self.regex_l_command.match(self.current_command):
+            self.current_command_type = "L"
+        else:
+            self.current_command_type = "COMMAND TYPE NOT DETECTED"     # TODO: Delete
 
     def symbol(self):
         """Return the symbol or decimal XXX of the current command, where the command is either an A_Command of the form
         @XXX or an L_Command of the form (XXX)."""
-        pass
+        # Gets the content (either a symbol or a decimal) of the current A or L command.
+        if self.current_command_type == "A":
+            self.current_command_content = self.current_command.replace("@", "")
+        elif self.current_command_type == "L":
+            self.current_command_content = self.current_command.replace("(", "").replace(")", "")
+        else:
+            print("ERROR!")     # TODO: Make into a real error catch.
 
     def dest(self):
         """Return the dest mnemonic string (one of 8 possible) in the current C_Command. Will only be called when
