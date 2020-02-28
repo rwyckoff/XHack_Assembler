@@ -16,7 +16,7 @@ class Parser:
     has_more_commands: Returns true if there are more commands (lines) in the input.
     advance: Reads the next command from the input and makes it the current command.
     command_type: Returns the type of the current command (the types being A_Command, C_Command, or L_Command).
-    symbol: Returns the symbol or decimanl of the current command.
+    symbol: Returns the symbol or decimal of the current command.
     dest: Returns the dest mnemonic in the current C_Command.
     comp: Returns the comp mnemonic in the current C_Command.
     jump: Returns the jump mnemonic in the current C_Command.
@@ -28,7 +28,7 @@ class Parser:
         """Construct the Parser object and open the given XHAL .asm input file to enable parsing of it.
 
         Arguments:
-        input_file: The XHAL .asm file to be parsed and translated into a .hack psuedo-binary machine language file.
+        input_file: The XHAL .asm file to be parsed and translated into a .hack pseudo-binary machine language file.
         """
         self.input_file = input_file
 
