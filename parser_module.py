@@ -25,22 +25,39 @@ class Parser:
     # TODO: May need to add arguments to some or all of the below methods.
 
     def __init__(self, input_file):
-        """Construct the Parser object and open the given XHAL .asm input file to enable parsing of it.
+        """Construct the Parser object and open the given XHAL .asm input file to enable parsing of it. Then save that
+        file as a list of commands to easily iterate over.
 
         Arguments:
         input_file: The XHAL .asm file to be parsed and translated into a .hack pseudo-binary machine language file.
         """
-        self.input_file = input_file
+        print(f"Parsing file {input_file}\n")
+
+        # Open the file for parsing, and save the text as a list where each element is a line.
+        with open(input_file, 'r') as file:
+            self.command_list = file.readlines()
+
+        # Strip newlines from the command list and remove blank lines.
+        self.command_list = [line.strip() for line in self.command_list if line.strip() != ""]
+
+        self.command_idx = 0
+
+        self.current_command = None
 
     def has_more_commands(self):
         """Detect if there are more commands in the XHAL .asm input file. Return true if there are, and false
         otherwise."""
-        pass
+        if self.command_idx < len(self.command_list):
+            return True
+        else:
+            return False
 
     def advance(self):
         """Read the next command from the XHAL .asm input file and makes that the current command. Advance() will only
         be called if has_more_commands() has just returned True. Initially there is no current command."""
-        pass
+        self.current_command = self.command_list[self.command_idx]
+        self.command_idx += 1
+        return self.current_command
 
     def command_type(self):
         """Return the type of the current command. There are three possible command types that could be returned:
