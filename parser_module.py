@@ -44,8 +44,6 @@ class Parser:
         Arguments:
         input_file: The XHAL .asm file to be parsed and translated into a .hack pseudo-binary machine language file.
         """
-        print(f"Parsing file {input_file}....\n")
-
         # Open the file for parsing, and save the text as a list where each element is a line.
         with open(input_file, 'r') as file:
             self.command_list = file.readlines()
@@ -53,20 +51,14 @@ class Parser:
         # Strip newlines from the command list and remove blank lines.
         self.command_list = [line.strip() for line in self.command_list if line.strip() != ""]
 
+        # Initialize variables.
         self.command_idx = 0
-
         self.current_command = None
-
         self.current_command_type = None
-
         self.current_command_subtype = None
-
         self.current_command_content = None
-
         self.current_command_dest = None
-
         self.current_command_comp = None
-
         self.current_command_jump = None
 
     def has_more_commands(self):
