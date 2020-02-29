@@ -17,3 +17,12 @@ while parser.has_more_commands():
     if parser.current_command_type == "A" or parser.current_command_type == "L":
         parser.symbol()
         print(f"Current command content: {parser.current_command_content}")
+    elif parser.current_command_type == "C":
+        if parser.current_command_subtype == "COMP":
+            parser.dest()
+            print(f"Current command dest: {parser.current_command_dest}")
+            parser.comp()
+            print(f"Current command comp: {parser.current_command_comp}")
+        elif parser.current_command_subtype == "JUMP":
+            parser.jump()
+            print(f"Current command jump: {parser.current_command_jump}")

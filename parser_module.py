@@ -5,6 +5,7 @@ Parser class: Opens XHAL .asm files and breaks XHAL assembly commands into their
 """
 import re
 
+# TODO: NEXT: Dest is always set to M. Why?
 # TODO: Currently setting instance variables instead of returning them. Cool? May want to change descriptions.
 
 
@@ -27,8 +28,12 @@ class Parser:
 
     # Initialize all regular expressions for the parser.
     regex_a_command = re.compile(r'^@', flags=re.MULTILINE)
-    regex_c_command = re.compile(r'(^[ADM]=)|(^MD=)|(^AM=)|(^AD=)|(^AMD=)|(^\d;J)', flags=re.MULTILINE)
+    regex_c_command = re.compile(r'(^[ADM]=)|(^MD=)|(^AM=)|(^AD=)|(^AMD=)|(^null=)', flags=re.MULTILINE)
+    regex_c_jump_command = re.compile(r'(^.*;J)')
     regex_l_command = re.compile(r'(^\().*(\)$)')
+    regex_post_dest = re.compile(r'=.*')
+    regex_pre_comp = re.compile(r'.*=')
+    regex_pre_jump = re.compile(r'.*;')
 
     # TODO: May need to add arguments to some or all of the below methods.
 
@@ -54,7 +59,15 @@ class Parser:
 
         self.current_command_type = None
 
+        self.current_command_subtype = None
+
         self.current_command_content = None
+
+        self.current_command_dest = None
+
+        self.current_command_comp = None
+
+        self.current_command_jump = None
 
     def has_more_commands(self):
         """Detect if there are more commands in the XHAL .asm input file. Return true if there are, and false
@@ -82,10 +95,14 @@ class Parser:
             self.current_command_type = "A"
         elif self.regex_c_command.match(self.current_command):
             self.current_command_type = "C"
+            self.current_command_subtype = "COMP"
+        elif self.regex_c_jump_command.match(self.current_command):
+            self.current_command_type = "C"
+            self.current_command_subtype = "JUMP"
         elif self.regex_l_command.match(self.current_command):
             self.current_command_type = "L"
         else:
-            self.current_command_type = "COMMAND TYPE NOT DETECTED"     # TODO: Delete
+            self.current_command_type = "COMMAND TYPE NOT DETECTED"     # TODO: Delete. Maybe add in comment detection
 
     def symbol(self):
         """Return the symbol or decimal XXX of the current command, where the command is either an A_Command of the form
@@ -101,14 +118,20 @@ class Parser:
     def dest(self):
         """Return the dest mnemonic string (one of 8 possible) in the current C_Command. Will only be called when
         command_type() returns a C_Command."""
-        pass
+        # Use a class-level regex to remove everything following the dest portion of the command and set that to
+        # the dest portion of the command.
+        self.current_command_dest = re.sub(self.regex_post_dest, "", self.current_command)
 
     def comp(self):
         """Return the comp mnemonic string (one of 28 possible) in the current C_Command. Will only be called when
         command_type() returns a C_Command."""
-        pass
+        # Use a class-level regex to remove everything before the comp portion of the command and set that to
+        # the comp portion of the command.
+        self.current_command_comp = re.sub(self.regex_pre_comp, "", self.current_command)
 
     def jump(self):
         """Return the jump mnemonic string (one of 8 possible) in the current C_Command. Will only be called when
         command_type() returns a C_Command."""
-        pass
+        # Use a class-level regex to remove everything before the jump portion of the command and set that to
+        # the jump portion of the command.
+        self.current_command_jump = re.sub(self.regex_pre_jump, "", self.current_command)
