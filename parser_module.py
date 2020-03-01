@@ -32,10 +32,12 @@ class Parser:
     regex_c_jump_command = re.compile(r'(^.*;J)')
     regex_l_command = re.compile(r'(^\().*(\)$)')
     regex_post_dest = re.compile(r'=.*')
-    regex_pre_comp = re.compile(r'.*=')
+    regex_comp_pre_comp = re.compile(r'.*=')
+    regex_jump_pre_comp = re.compile(r';.*')
     regex_pre_jump = re.compile(r'.*;')
+    regex_comment = re.compile(r'//.*')
 
-    # TODO: May need to add arguments to some or all of the below methods.
+    # TODO: Will want to detect all comments, not just the ones that start the line with //
 
     def __init__(self, input_file):
         """Construct the Parser object and open the given XHAL .asm input file to enable parsing of it. Then save that
@@ -93,6 +95,8 @@ class Parser:
             self.current_command_subtype = "JUMP"
         elif self.regex_l_command.match(self.current_command):
             self.current_command_type = "L"
+        elif self.regex_comment.match(self.current_command):
+            self.current_command_type = "COMMENT"
         else:
             self.current_command_type = "COMMAND TYPE NOT DETECTED"     # TODO: Delete. Maybe add in comment detection
 
@@ -112,14 +116,20 @@ class Parser:
         command_type() returns a C_Command."""
         # Use a class-level regex to remove everything following the dest portion of the command and set that to
         # the dest portion of the command.
-        self.current_command_dest = re.sub(self.regex_post_dest, "", self.current_command)
+        if self.current_command_subtype == "COMP":
+            self.current_command_dest = re.sub(self.regex_post_dest, "", self.current_command)
+        elif self.current_command_subtype == "JUMP":
+            self.current_command_dest = "null"      # Dest fields for jumps are null and will translate to 000.
 
     def comp(self):
         """Return the comp mnemonic string (one of 28 possible) in the current C_Command. Will only be called when
         command_type() returns a C_Command."""
         # Use a class-level regex to remove everything before the comp portion of the command and set that to
         # the comp portion of the command.
-        self.current_command_comp = re.sub(self.regex_pre_comp, "", self.current_command)
+        if self.current_command_subtype == "COMP":
+            self.current_command_comp = re.sub(self.regex_comp_pre_comp, "", self.current_command)
+        elif self.current_command_subtype == "JUMP":
+            self.current_command_comp = re.sub(self.regex_jump_pre_comp, "", self.current_command)
 
     def jump(self):
         """Return the jump mnemonic string (one of 8 possible) in the current C_Command. Will only be called when
