@@ -19,6 +19,8 @@ parser = Parser(argv[1])
 
 code_translator = Code()
 
+# TODO: Track the current ROM address for the symbol table in the two loops, outside of functions and objects.
+
 while parser.has_more_commands():
     current_word = ""
     parser.advance()
@@ -54,6 +56,7 @@ while parser.has_more_commands():
             print(f"Jump binary code: {jump_code}")
             current_word = "111" + comp_code + dest_code + jump_code
 
+    # If the current line starts with a //, consider it a comment and ignore it.
     elif parser.current_command_type == "COMMENT":
         continue
 
