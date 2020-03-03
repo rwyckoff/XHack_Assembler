@@ -6,6 +6,7 @@ language file.
 from sys import argv
 from parser_module import Parser
 from code_module import Code
+from symbol_table_module import SymbolTable
 
 # TODO: Encapsulate what's inside the loop into a few functions. Probably Parse(), Translate_Code(), and others?
 # TODO: Make output file also an arg?
@@ -18,8 +19,22 @@ output_file = open(r"C:/Users/Robert Sirois/Dropbox/Shpob Storage/School/Compile
 parser = Parser(argv[1])
 
 code_translator = Code()
+symbol_table = SymbolTable()
 
 # TODO: Track the current ROM address for the symbol table in the two loops, outside of functions and objects.
+
+current_ROM_address = 0     # TODO: Book says this should be 0, but should it actually be 16?
+
+while parser.has_more_commands():
+    print("\nBeginning the first pass of the assembly program....\n\n")
+    parser.advance()
+    parser.command_type()
+    if parser.current_command_type == "C" or parser.current_command_type == "A":
+        current_ROM_address += 1
+    elif parser.current_command_type == "L":
+        symbol_table.add_entry(parser.symbol(), current_ROM_address)
+
+parser.reset_parser()
 
 while parser.has_more_commands():
     current_word = ""

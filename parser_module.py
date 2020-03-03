@@ -137,3 +137,8 @@ class Parser:
         # Use a class-level regex to remove everything before the jump portion of the command and set that to
         # the jump portion of the command.
         self.current_command_jump = re.sub(self.regex_pre_jump, "", self.current_command)
+
+    def reset_parser(self):
+        """Resets the command index of the parser so that the assembler can run through the XHAL code multiple times."""
+        self.command_idx = 0
+        self.current_command = None
