@@ -24,18 +24,24 @@ symbol_table = SymbolTable()
 # TODO: Track the current ROM address for the symbol table in the two loops, outside of functions and objects.
 
 current_ROM_address = 0     # TODO: Book says this should be 0, but should it actually be 16?
+current_unallocated_ROM_add = 16
 
+print("\nBeginning the first pass of the assembly program....\n\n")
 while parser.has_more_commands():
-    print("\nBeginning the first pass of the assembly program....\n\n")
     parser.advance()
     parser.command_type()
     if parser.current_command_type == "C" or parser.current_command_type == "A":
         current_ROM_address += 1
+        print(f"\nCURRENT ROM ADDRESS: {current_ROM_address}")
     elif parser.current_command_type == "L":
-        symbol_table.add_entry(parser.symbol(), current_ROM_address)
+        parser.symbol()
+        symbol_table.add_entry(parser.current_command_content, current_ROM_address)
 
 parser.reset_parser()
 
+print(f"\n\n\n\n\n*************************\n\n\nSymbol Table:\n{symbol_table.symbol_table}\n\n\n***************\n\n\n")
+
+print("\nBeginning the second pass of the assembly program....\n\n")
 while parser.has_more_commands():
     current_word = ""
     parser.advance()
@@ -47,11 +53,24 @@ while parser.has_more_commands():
         print(f"Current command content: {parser.current_command_content}")
 
         if parser.current_command_type == "A":
-            # String to binary translation from https://www.geeksforgeeks.org/python-convert-string-to-binary/
-            # address_code = ''.join(format(ord(i), 'b') for i in parser.current_command_content)
+            if not parser.current_command_content.isdigit():
+                # TODO: Add nested if checking to see if the command is symbolic or not.
+                # String to binary translation from https://www.geeksforgeeks.org/python-convert-string-to-binary/
+                # address_code = ''.join(format(ord(i), 'b') for i in parser.current_command_content)
 
-            address_code = bin(int(parser.current_command_content)).replace("0b", "")
+                if symbol_table.contains(parser.current_command_content):
+                    address = symbol_table.get_address(parser.current_command_content)
+                else:           # The symbol table does not yet contain the current symbol.
+                    symbol_table.add_entry(parser.current_command_content, current_unallocated_ROM_add)
+                    current_unallocated_ROM_add += 1
+                    address = symbol_table.get_address(parser.current_command_content)
+            else:
+                address = parser.current_command_content
+            address_code = bin(int(address)).replace("0b", "")
             current_word = "0" + address_code.zfill(15)
+
+        elif parser.current_command_type == "L":
+            continue
 
     elif parser.current_command_type == "C":
         parser.dest()
