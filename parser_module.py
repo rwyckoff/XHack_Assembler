@@ -5,8 +5,8 @@ Parser class: Opens XHAL .asm files and breaks XHAL assembly commands into their
 """
 import re
 
-# TODO: NEXT: Dest is always set to M. Why?
 # TODO: Currently setting instance variables instead of returning them. Cool? May want to change descriptions.
+# TODO: When an error is encountered, report/log it and continue so that I can find all the errors in the file.
 
 
 class Parser:
@@ -36,8 +36,6 @@ class Parser:
     regex_jump_pre_comp = re.compile(r';.*')
     regex_pre_jump = re.compile(r'.*;')
     regex_comment = re.compile(r'//.*')
-
-    # TODO: Will want to detect all comments, not just the ones that start the line with //
 
     def __init__(self, input_file):
         """Construct the Parser object and open the given XHAL .asm input file to enable parsing of it. Then save that
@@ -98,7 +96,7 @@ class Parser:
         elif self.regex_comment.match(self.current_command):
             self.current_command_type = "COMMENT"
         else:
-            self.current_command_type = "COMMAND TYPE NOT DETECTED"     # TODO: Delete. Maybe add in comment detection
+            self.current_command_type = "COMMAND TYPE NOT DETECTED"     # TODO: Error detection here?
 
     def symbol(self):
         """Return the symbol or decimal XXX of the current command, where the command is either an A_Command of the form
