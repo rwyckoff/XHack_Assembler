@@ -28,8 +28,12 @@ class Parser:
 
     # Initialize all regular expressions for the parser.
     regex_a_command = re.compile(r'^@', flags=re.MULTILINE)
-    regex_c_command = re.compile(r'(^[ADM]=)|(^MD=)|(^AM=)|(^AD=)|(^AMD=)|(^null=)', flags=re.MULTILINE)
-    regex_c_jump_command = re.compile(r'(^.*;J)')
+
+    # TODO: Below is too specific for error handling. Keep just in case.
+    #regex_c_command = re.compile(r'(^[ADM]=)|(^MD=)|(^AM=)|(^AD=)|(^AMD=)|(^null=)', flags=re.MULTILINE)
+
+    regex_c_command = re.compile(r'^.+=')
+    regex_c_jump_command = re.compile(r'(^.*;)')
     regex_l_command = re.compile(r'(^\().*(\)$)')
     regex_post_dest = re.compile(r'=.*')
     regex_comp_pre_comp = re.compile(r'.*=')

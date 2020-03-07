@@ -4,8 +4,13 @@ The error_checker module exports the ErrorChecker class.
 ErrorChecker class: Checks for various types of errors in the original XHAL code. Has options to report them to the
 console and/or a generated error log, stored in the error_logs file.
 """
-import re
 import datetime as dt
+
+
+# TODO: A warning about how floating-point-style symbols probably aren't meant to be symbols and may instead mean to be
+#  non-symbol address values.
+
+# TODO: Currently only checks if jump portion is invalid OR blank. Should separate the two into two errors, ideally. Meh
 
 
 class ErrorChecker:
@@ -14,6 +19,7 @@ class ErrorChecker:
         self.print_to_console = print_to_console
         self.write_to_log = write_to_log
 
+        # Below lines generate a random error file name based on the current date and time.
         # Date-time formatting idea from
         # https://stackoverflow.com/questions/10501247/best-way-to-generate-random-file-names-in-python
         error_log_path = r"C:/Users/Robert Sirois/Dropbox/Shpob Storage/School/Compiler Design/Projects/Project One/" \
@@ -22,6 +28,32 @@ class ErrorChecker:
         file_name_suffix = dt.datetime.now().strftime("%y%m%d_%H%M%S")
         self.date_time_filename = "_".join([error_log_path, base_filename, file_name_suffix])
 
+        self.illegal_labels = {
+            "SP": "0",
+            "LCL": "1",
+            "ARG": "2",
+            "THIS": "3",
+            "THAT": "4",
+            "R0": "0",
+            "R1": "1",
+            "R2": "2",
+            "R3": "3",
+            "R4": "4",
+            "R5": "5",
+            "R6": "6",
+            "R7": "7",
+            "R8": "8",
+            "R9": "9",
+            "R10": "10",
+            "R11": "11",
+            "R12": "12",
+            "R13": "13",
+            "R14": "14",
+            "R15": "15",
+            "SCREEN": "16384",
+            "KBD": "24576"
+        }
+
     def write_error(self, error_line, error_content):
         if self.print_to_console:
             print(f"\n##########\n\nERROR, line {error_line}: {error_content}\n\n##########\n")
@@ -29,10 +61,68 @@ class ErrorChecker:
             error_file = open(self.date_time_filename, "a")
             error_file.write(f"\n##########\n\nERROR, line {error_line}: {error_content}\n\n##########\n")
 
-    def check_a_type_command(self, command, line):
-        print(f"Address: {command}")
-        if len(command) == 0:
-            self.write_error(line, "Missing value for address field in an A-Type instruction.")
+    def write_warning(self, warning_line, warning_content):
+        if self.print_to_console:
+            print(f"\n!!!!!!!!!!\n\nWARNING, line {warning_line}: {warning_content}\n\n!!!!!!!!!!\n")
+        if self.write_to_log:
+            error_file = open(self.date_time_filename, "a")
+            error_file.write(f"\n!!!!!!!!!!\n\nWarning, line {warning_line}: {warning_content}\n\n!!!!!!!!!!\n")
 
-        if len(command) > 15:
-            pass
+    def check_a_type_int_command(self, command, line):
+        print(f"Error=checking address: {command}")
+        if len(command) == 0:
+            self.write_error(line, "Missing value for address field in A-Type instruction.")
+            return True
+
+        if command[0] == "-":
+            self.write_error(line, "Address field in A-Type instruction is negative. A-Type instructions "
+                                   "require non-negative 15-bit integers.")
+            return True
+        # If the function does not find an error, return false.
+        return False
+
+    def check_a_type_bin_command(self, command, line):
+
+        try:
+            # String to binary translation from https://www.geeksforgeeks.org/python-convert-string-to-binary/
+            binary_code = bin(int(command)).replace("0b", "")
+            print(f"Error-checker binary code: {binary_code}")
+
+            if len(binary_code) > 15:
+                self.write_error(line, "Address field in A-Type instruction is over 15 bits long. A-Type instructions "
+                                       "require non-negative 15-bit integers.")
+                return True
+        except ValueError:
+            self.write_error(line, "Address field in A-Type instruction is not translatable to binary. A-Type "
+                                   "instructions require non-negative 15-bit integers.")
+            return True
+        # If the function does not find an error, return false.
+        return False
+
+    def record_c_type_dest_error(self, line):
+        self.write_error(line, "A destination for C-Type instruction was detected, but it is not one of the supported "
+                               "mnemonics.")
+
+    def record_c_type_comp_error(self, line):
+        self.write_error(line, "The computation portion of C-Type instruction is either missing or is not one of the "
+                               "supported mnemonics.")
+
+    def record_c_type_jump_error(self, line):
+        self.write_error(line, "A jump for C-Type instruction was detected, but it is not one of the supported "
+                               "mnemonics.")
+
+    def check_l_type_illegal_error(self, label_content, line):
+        if label_content in self.illegal_labels:
+            self.write_error(line, f"{label_content} is an illegal label name; label is in the reserved labels list.")
+            return True
+        else:
+            return False
+
+    def record_l_type_redefinition_error(self, label_content, line, original_label_ROM_add):
+        self.write_error(line, f"{label_content} redefines a previously defined label as a different ROM location. The "
+                               f"original label's ROM address is {original_label_ROM_add}.")
+
+    def record_l_type_redefinition_warning(self, label_content, line, ROM_add):
+        self.write_warning(line, f"{label_content} redefines a previously defined label. The ROM locations are the "
+                                 f"same, but this was likely unintended. The ROM address for both labels is "
+                                 f"{ROM_add}.")

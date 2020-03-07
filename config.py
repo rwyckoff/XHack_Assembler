@@ -1,0 +1,3 @@
+# Settings
+PRINT_ERRORS_TO_CONSOLE = True
+WRITE_ERRORS_TO_LOG = False
