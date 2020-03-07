@@ -5,6 +5,7 @@ ErrorChecker class: Checks for various types of errors in the original XHAL code
 console and/or a generated error log, stored in the error_logs file.
 """
 import datetime as dt
+import config
 
 
 # TODO: A warning about how floating-point-style symbols probably aren't meant to be symbols and may instead mean to be

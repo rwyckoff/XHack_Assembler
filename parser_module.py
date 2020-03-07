@@ -34,7 +34,7 @@ class Parser:
 
     regex_c_command = re.compile(r'^.+=')
     regex_c_jump_command = re.compile(r'(^.*;)')
-    regex_l_command = re.compile(r'(^\().*(\)$)')
+    regex_l_command = re.compile(r'(^\().*(\))')
     regex_post_dest = re.compile(r'=.*')
     regex_comp_pre_comp = re.compile(r'.*=')
     regex_jump_pre_comp = re.compile(r';.*')

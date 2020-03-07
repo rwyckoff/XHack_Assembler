@@ -18,6 +18,8 @@ from error_checker import ErrorChecker
 # TODO: Legal labels are numbers or symbolic constants that can look like pretty much anything.
 # TODO: Illegal labels are R0-15, SP, LCL, ARG, THIS, THAT, SCREEN, and KBD.
 
+# TODO: NEXT, refactoring so that the error checker uses static methods so no object need be created.
+
 
 # Open a .hack file for writing binary text to.
 output_file = open(r"C:/Users/Robert Sirois/Dropbox/Shpob Storage/School/Compiler Design/Projects/Project One/"
@@ -59,6 +61,7 @@ while parser.has_more_commands():
         current_ROM_address += 1
         print(f"\nCURRENT ROM ADDRESS: {current_ROM_address}")
     elif parser.current_command_type == "L":
+        # TODO: Put error checker here for a label containing non-blank, non-comment text after the second paren.
         parser.symbol()
 
         # If the label name is illegal, record the error and skip the current line.
