@@ -3,7 +3,6 @@ The code module exports the Code class.
 
 Code class: Translates XHAL mnemonics into binary codes.
 """
-from error_checker import ErrorChecker
 
 
 class Code:

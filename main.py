@@ -8,7 +8,7 @@ import config
 from parser_module import Parser
 from code_module import Code
 from symbol_table_module import SymbolTable
-from error_checker import ErrorChecker
+from error_checker import *
 
 # TODO: Encapsulate what's inside the loop into a few functions. Probably Parse(), Translate_Code(), and others?
 # TODO: Make output file also an arg?
@@ -24,11 +24,12 @@ from error_checker import ErrorChecker
 # Open a .hack file for writing binary text to.
 output_file = open(r"C:/Users/Robert Sirois/Dropbox/Shpob Storage/School/Compiler Design/Projects/Project One/"
                    r"Robert_Wyckoff_PJ01_XHack/test_output_data/test.hack", "w")
+# Create and open an error file.
+error_file = open(create_error_file(), "w")
 
 parser = Parser(argv[1])  # Initialize the parser with the input file as the first command-line argument.
 code_translator = Code()  # Initialize the code module, responsible for translation from XHAL to binary codes.
 symbol_table = SymbolTable()  # Initialize the symbol table.
-error_checker = ErrorChecker(config.PRINT_ERRORS_TO_CONSOLE, config.WRITE_ERRORS_TO_LOG)
 
 current_line = 0
 current_ROM_address = 0
@@ -65,7 +66,7 @@ while parser.has_more_commands():
         parser.symbol()
 
         # If the label name is illegal, record the error and skip the current line.
-        if error_checker.check_l_type_illegal_error(parser.current_command_content, current_line):
+        if check_l_type_illegal_error(parser.current_command_content, current_line):
             continue
 
         # If the label redefines a previously defined label, record either an error or a warning.
@@ -74,13 +75,13 @@ while parser.has_more_commands():
             # If the label redefines a previously defined label with a different ROM address, record the error and skip
             # the current line.
             if prev_label_add != current_ROM_address:
-                error_checker.record_l_type_redefinition_error(parser.current_command_content,
+                record_l_type_redefinition_error(parser.current_command_content,
                                                                current_line, prev_label_add)
                 continue
             # Otherwise, the original and new label ROM addresses are the same, so technically no harm done. Thus,
             # record a warning and continue as normal.
             else:
-                error_checker.record_l_type_redefinition_warning(parser.current_command_content, current_line,
+                record_l_type_redefinition_warning(parser.current_command_content, current_line,
                                                                  current_ROM_address)
 
 
@@ -120,13 +121,13 @@ while parser.has_more_commands():
                     address = symbol_table.get_address(parser.current_command_content)
 
             # If an error is found with the current non-symbolic A-Type command, record the error and skip the line.
-            elif error_checker.check_a_type_int_command(parser.current_command_content, current_line):
+            elif check_a_type_int_command(parser.current_command_content, current_line):
                 continue
             else:
                 address = parser.current_command_content
             # If an error is found with translating the address field into binary or the binary code is too long,
             # record the error and skip the line.
-            if error_checker.check_a_type_bin_command(address, current_line):
+            if check_a_type_bin_command(address, current_line):
                 continue
             # Otherwise, everything appears fine with the address field, so translate as usual.
             else:
@@ -144,7 +145,7 @@ while parser.has_more_commands():
         try:
             dest_code = code_translator.dest(dest_mnemonic=parser.current_command_dest)
         except KeyError:
-            error_checker.record_c_type_dest_error(current_line)
+            record_c_type_dest_error(current_line)
             continue
         print(f"Dest binary code: {dest_code}")
         parser.comp()
@@ -152,7 +153,7 @@ while parser.has_more_commands():
         try:
             comp_code = code_translator.comp(comp_mnemonic=parser.current_command_comp)
         except KeyError:
-            error_checker.record_c_type_comp_error(current_line)
+            record_c_type_comp_error(current_line)
             continue
         print(f"Comp binary code: {comp_code}")
         if parser.current_command_subtype == "COMP":
@@ -163,7 +164,7 @@ while parser.has_more_commands():
             try:
                 jump_code = code_translator.jump(jump_mnemonic=parser.current_command_jump)
             except KeyError:
-                error_checker.record_c_type_jump_error(current_line)
+                record_c_type_jump_error(current_line)
                 continue
             print(f"Jump binary code: {jump_code}")
             current_word = "111" + comp_code + dest_code + jump_code
