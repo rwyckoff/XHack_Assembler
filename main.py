@@ -62,8 +62,10 @@ while parser.has_more_commands():
         current_ROM_address += 1
         print(f"\nCURRENT ROM ADDRESS: {current_ROM_address}")
     elif parser.current_command_type == "L":
-        # TODO: Put error checker here for a label containing non-blank, non-comment text after the second paren.
-        parser.symbol()
+        if check_l_type_text_after_paren_error(parser.current_command, current_line):
+            continue
+        else:
+            parser.symbol()
 
         # If the label name is illegal, record the error and skip the current line.
         if check_l_type_illegal_error(parser.current_command_content, current_line):
@@ -83,10 +85,13 @@ while parser.has_more_commands():
             else:
                 record_l_type_redefinition_warning(parser.current_command_content, current_line,
                                                                  current_ROM_address)
-
-
-
         symbol_table.add_entry(parser.current_command_content, current_ROM_address)
+    elif parser.current_command_type == "ILLEGAL":
+        continue
+
+
+
+
 
 # Reset parser so it starts from the beginning of the assembly code again and reset the current line to 0.
 parser.reset_parser()

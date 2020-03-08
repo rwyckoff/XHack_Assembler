@@ -5,6 +5,7 @@ Parser class: Opens XHAL .asm files and breaks XHAL assembly commands into their
 """
 import re
 
+
 # TODO: Currently setting instance variables instead of returning them. Cool? May want to change descriptions.
 # TODO: When an error is encountered, report/log it and continue so that I can find all the errors in the file.
 
@@ -30,7 +31,7 @@ class Parser:
     regex_a_command = re.compile(r'^@', flags=re.MULTILINE)
 
     # TODO: Below is too specific for error handling. Keep just in case.
-    #regex_c_command = re.compile(r'(^[ADM]=)|(^MD=)|(^AM=)|(^AD=)|(^AMD=)|(^null=)', flags=re.MULTILINE)
+    # regex_c_command = re.compile(r'(^[ADM]=)|(^MD=)|(^AM=)|(^AD=)|(^AMD=)|(^null=)', flags=re.MULTILINE)
 
     regex_c_command = re.compile(r'^.+=')
     regex_c_jump_command = re.compile(r'(^.*;)')
@@ -100,7 +101,7 @@ class Parser:
         elif self.regex_comment.match(self.current_command):
             self.current_command_type = "COMMENT"
         else:
-            self.current_command_type = "COMMAND TYPE NOT DETECTED"     # TODO: Error detection here?
+            self.current_command_type = "COMMAND TYPE NOT DETECTED"  # TODO: Error detection here?
 
     def symbol(self):
         """Return the symbol or decimal XXX of the current command, where the command is either an A_Command of the form
@@ -111,7 +112,7 @@ class Parser:
         elif self.current_command_type == "L":
             self.current_command_content = self.current_command.replace("(", "").replace(")", "")
         else:
-            print("ERROR!")     # TODO: Make into a real error catch.
+            print("ERROR!")  # TODO: Make into a real error catch.
 
     def dest(self):
         """Return the dest mnemonic string (one of 8 possible) in the current C_Command. Will only be called when
@@ -121,7 +122,7 @@ class Parser:
         if self.current_command_subtype == "COMP":
             self.current_command_dest = re.sub(self.regex_post_dest, "", self.current_command)
         elif self.current_command_subtype == "JUMP":
-            self.current_command_dest = "null"      # Dest fields for jumps are null and will translate to 000.
+            self.current_command_dest = "null"  # Dest fields for jumps are null and will translate to 000.
 
     def comp(self):
         """Return the comp mnemonic string (one of 28 possible) in the current C_Command. Will only be called when
