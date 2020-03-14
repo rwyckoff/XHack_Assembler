@@ -88,7 +88,9 @@ class Parser:
         L_Command: A pseudo-command in the form of (XXX), where XXX is a symbol.
         """
         # Detect the current command type and set it based on the class-level compiled regular expressions.
-        if self.regex_a_command.match(self.current_command):
+        if self.regex_comment.match(self.current_command):
+            self.current_command_type = "COMMENT"
+        elif self.regex_a_command.match(self.current_command):
             self.current_command_type = "A"
         elif self.regex_c_command.match(self.current_command):
             self.current_command_type = "C"
@@ -98,8 +100,6 @@ class Parser:
             self.current_command_subtype = "JUMP"
         elif self.regex_l_command.match(self.current_command):
             self.current_command_type = "L"
-        elif self.regex_comment.match(self.current_command):
-            self.current_command_type = "COMMENT"
         else:
             self.current_command_type = "COMMAND TYPE NOT DETECTED"  # TODO: Error detection here?
 
@@ -145,3 +145,13 @@ class Parser:
         """Resets the command index of the parser so that the assembler can run through the XHAL code multiple times."""
         self.command_idx = 0
         self.current_command = None
+
+    def strip_comments(self):
+        """Edits the current command, stripping off any inline comments."""
+        comment_text = self.regex_comment.search(self.current_command)
+        if comment_text is not None:
+            self.current_command = self.current_command.replace(comment_text[0], "")
+
+    def strip_whitespace(self):
+        """Edits the current command, stripping off any whitespace"""
+        self.current_command = self.current_command.replace(" ", "")

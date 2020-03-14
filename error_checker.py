@@ -137,13 +137,13 @@ def check_l_type_text_after_paren_error(label_command, line):
     # https://stackoverflow.com/questions/904746/how-to-remove-all-characters-after-a-specific-character-in-python
     regex_post_paren = re.compile(r'(\)[\S]+)')
     post_paren_text = regex_post_paren.search(label_command.replace(" ", ""))
-    head, sep, tail = post_paren_text[0].partition('//')
 
     # If what is matched is anything but '//' to indicate the start of a comment, record the error and return True.
     if post_paren_text is not None:
+        head, sep, tail = post_paren_text[0].partition('//')
         if tail is "" and "//" not in post_paren_text[0]:
             write_error(line, f"{label_command} has non-comment, non-blank text after the closing parenthesis.")
-        return True
+            return True
     else:
         return False
 
