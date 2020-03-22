@@ -109,9 +109,10 @@ class SymbolTable:
         had just returned true."""
         return self.symbol_table[symbol]
 
-    def export_symbol_tables(self):
+    def export_symbol_tables(self, io_file):
+        # TODO: Change to relative path.
         with open(r"C:/Users/Robert Sirois/Dropbox/Shpob Storage/School/Compiler Design/Projects/"
-                  r"Project One/Robert_Wyckoff_PJ01_XHack/symbol_tables/sym_tables.txt", "w") as file:
+                  r"Project One/Robert_Wyckoff_PJ01_XHack/symbol_tables/" + io_file + "_sym_tables.txt", "w") as file:
             h_titles = "Entry", "Address", "Line"
             header = f"RAM Symbol Table\n----------\n{h_titles[0]:<50}{h_titles[1]:<50}{h_titles[2]:<50}\n" \
                      f"------------------------------------------------------------------------------------------" \

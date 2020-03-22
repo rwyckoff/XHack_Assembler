@@ -1,0 +1,6 @@
+
+##########
+
+ERROR, line 18: Address field in A-Type instruction is not translatable to binary. A-Type instructions require non-negative 15-bit integers.
+
+##########

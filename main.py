@@ -4,31 +4,29 @@ language file.
 """
 
 from sys import argv
-import config
-from parser_module import Parser
+
 from code_module import Code
-from symbol_table_module import SymbolTable
 from error_checker import *
-import os
+from parser_module import Parser
+from symbol_table_module import SymbolTable
 
 # TODO: Encapsulate what's inside the loop into a few functions. Probably Parse(), Translate_Code(), and others?
-# TODO: Make output file also an arg?
-# TODO: Notes say first pass should skip over numeric labels and only add strings? True?
-# TODO: Fix error log creation location and optional text doc generation.
-
+# TODO: Add EQU stuff to symbol table in second pass instead. Optional, but probably a good idea. Save beforehand.
 
 # Open a .hack file for writing binary text to.
 # Relative file location code from
 # https://stackoverflow.com/questions/7165749/open-file-in-a-relative-location-in-python
 file_path = os.path.abspath(__file__)
 file_dir = os.path.split(file_path)[0]
-relative_path = r"binary_output/test.hack"
+relative_path = r"binary_output/" + argv[2] + ".hack"       # The output file name (minus the .hack) is arg 2.
 output_file_path = os.path.join(file_dir, relative_path)
 print(output_file_path)
 output_file = open(output_file_path, "w")
 
-# Create and open an error file.
-error_file = open(create_error_file(), "w")
+# Create and open an error file if the option to is set.
+error_file = None
+if config.WRITE_ERRORS_TO_LOG:
+    error_file = open(create_error_file(argv[2]), "w")
 
 parser = Parser(argv[1])  # Initialize the parser with the input file as the first command-line argument.
 code_translator = Code()  # Initialize the code module, responsible for translation from XHAL to binary codes.
@@ -137,7 +135,7 @@ while parser.has_more_commands():
     parser.command_type()
     print(f"Current command type: {parser.current_command_type}")
     # If the current line starts with a //, consider it a comment and ignore it.
-    if parser.current_command_type == "COMMENT":
+    if parser.current_command_type == "COMMENT" or parser.current_command_type == "EQU":
         continue
     elif parser.current_command_type == "A" or parser.current_command_type == "L":
         parser.strip_comments()
@@ -163,7 +161,7 @@ while parser.has_more_commands():
                 address = parser.current_command_content
             # If an error is found with translating the address field into binary or the binary code is too long,
             # record the error and skip the line.
-            if check_a_type_bin_command(address, current_line):
+            if check_a_type_bin_command(address, current_line): # TODO: Next, allow it to handle hex.
                 continue
             # Otherwise, everything appears fine with the address field, so translate as usual.
             else:
@@ -213,4 +211,8 @@ while parser.has_more_commands():
 print(f"\n\n\n\n\n*************************\n\n\nSymbol Table:\n{symbol_table.symbol_table}\n\n\n***************\n\n\n")
 
 if config.EXPORT_SYMBOL_TABLES:
-    symbol_table.export_symbol_tables()
+    symbol_table.export_symbol_tables(argv[2])
+
+if error_file is not None:
+    error_file.close()
+output_file.close()

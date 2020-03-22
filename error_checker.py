@@ -45,28 +45,23 @@ illegal_labels = {
 }
 
 
-def create_error_file():
+def create_error_file(io_file):
     # Below lines generate a random error file name based on the current date and time.
     # Date-time formatting idea from
     # https://stackoverflow.com/questions/10501247/best-way-to-generate-random-file-names-in-python
     # and relative file directory code from
     # https://stackoverflow.com/questions/7165749/open-file-in-a-relative-location-in-python
-    # file_path = os.path.abspath(__file__)
-    # file_dir = os.path.split(file_path)[0] + r"\error_logs"
 
     base_filename = "error_log"
     file_name_suffix = dt.datetime.now().strftime("%y%m%d_%H%M%S") + ".txt"
 
     file_path = os.path.abspath(__file__)
-    file_dir = os.path.split(file_path)[0] + '/' + base_filename + file_name_suffix
-    relative_path = os.path.join("error_logs", base_filename, file_name_suffix)
+    file_dir = os.path.split(file_path)[0] + '/' 'error_logs' + '/' + base_filename + '_' \
+        + io_file + '_' + file_name_suffix
 
     # Set the module-scope error output filename
     global FILENAME
     FILENAME = file_dir
-    # FILENAME = os.path.join(file_dir, relative_path)
-    print(FILENAME)
-
     return FILENAME
 
 

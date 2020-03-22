@@ -119,17 +119,20 @@ class Parser:
         else:
             self.current_command_type = "COMMAND TYPE NOT DETECTED"  # TODO: Error detection here?
 
-    def translate_bin_hex(self):
+    def translate_bin_hex(self, content):
         """Detects if the content of the command is written in binary or hexidecimal, then translates and redefines the
-        content into decimal."""
-        if self.regex_binary.match(self.current_command_content):
+        content into decimal and returns that value."""
+        if self.regex_binary.match(content):
             print("Binary detected! Translating....")
-            stripped_content = self.current_command_content.replace('0b', '').replace('0B', '')
-            self.current_command_content = str(int(stripped_content, 2))
+            stripped_content = content.replace('0b', '').replace('0B', '')
+            return str(int(stripped_content, 2))
         elif self.regex_hex.match(self.current_command_content):
             print("Hex detected! Translating....")
             stripped_content = self.current_command_content.replace('0x', '').replace('0X', '')
-            self.current_command_content = str(int(stripped_content, 16))
+            return str(int(stripped_content, 16))
+        # No binary or hexadecimal is detected, so return the content unchanged.
+        else:
+            return content
 
     def symbol(self):
         """Set the symbol or decimal XXX of the current command, where the command is either an A_Command of the form
@@ -140,13 +143,15 @@ class Parser:
             stripped_of_equ = self.current_command.replace(".EQU ", "")
             self.current_command_content = re.sub(self.regex_post_equ_symbol, "", stripped_of_equ)
             self.current_command_equ_address = re.sub(self.regex_pre_equ_address, "", stripped_of_equ)
+            self.current_command_equ_address = self.translate_bin_hex(self.current_command_equ_address)
         elif self.current_command_type == "A":
             self.current_command_content = self.current_command.replace("@", "")
+            self.current_command_content = self.translate_bin_hex(self.current_command_content)
         elif self.current_command_type == "L":
             self.current_command_content = self.current_command.replace("(", "").replace(")", "")
+            self.current_command_content = self.translate_bin_hex(self.current_command_content)
         else:
             print("ERROR!")  # TODO: Make into a real error catch.
-        self.translate_bin_hex()
 
     def dest(self):
         """Return the dest mnemonic string (one of 8 possible) in the current C_Command. Will only be called when
