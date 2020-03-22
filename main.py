@@ -14,6 +14,7 @@ import os
 # TODO: Encapsulate what's inside the loop into a few functions. Probably Parse(), Translate_Code(), and others?
 # TODO: Make output file also an arg?
 # TODO: Notes say first pass should skip over numeric labels and only add strings? True?
+# TODO: Fix error log creation location and optional text doc generation.
 
 
 # Open a .hack file for writing binary text to.
