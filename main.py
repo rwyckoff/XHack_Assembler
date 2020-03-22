@@ -67,8 +67,27 @@ while parser.has_more_commands():
     parser.advance()
     parser.command_type()
     if parser.current_command_type == "EQU":
-        print(f"EQU found!")
         parser.symbol()
+        # If the EQU symbol name is illegal, record the error and skip the current line.
+        if check_illegal_symbol_error(parser.current_command_content, current_line):
+            continue
+
+        # If the EQU symbol redefines a previously defined symbol, record either an error or a warning.
+        if symbol_table.contains(parser.current_command_content):
+            prev_label_add = symbol_table.get_address(parser.current_command_content)
+            # If the EQU symbol redefines a previously defined symbol with a different address, record the error
+            # and skip the current line.
+            if prev_label_add != parser.current_command_equ_address:
+                record_symbol_redefinition_error(parser.current_command_content, current_line, prev_label_add)
+                continue
+            # Otherwise, the original and new symbol addresses are the same, so technically no harm done. Thus,
+            # record a warning and continue as normal.
+            else:
+                record_symbol_redefinition_warning(parser.current_command_content, current_line,
+                                                   parser.current_command_equ_address)
+        # If no label-related errors, add the EQU symbol to the symbol table.
+        symbol_table.add_entry(parser.current_command_content, parser.current_command_equ_address, "EQU", current_line)
+
     elif parser.current_command_type == "C" or parser.current_command_type == "A":
         current_ROM_address += 1
         print(f"\nCURRENT ROM ADDRESS: {current_ROM_address}, instr: {parser.current_command}")
@@ -79,7 +98,7 @@ while parser.has_more_commands():
             parser.symbol()
 
         # If the label name is illegal, record the error and skip the current line.
-        if check_l_type_illegal_error(parser.current_command_content, current_line):
+        if check_illegal_symbol_error(parser.current_command_content, current_line):
             continue
 
         # If the label redefines a previously defined label, record either an error or a warning.
@@ -88,13 +107,13 @@ while parser.has_more_commands():
             # If the label redefines a previously defined label with a different ROM address, record the error and skip
             # the current line.
             if prev_label_add != current_ROM_address:
-                record_l_type_redefinition_error(parser.current_command_content,
+                record_symbol_redefinition_error(parser.current_command_content,
                                                  current_line, prev_label_add)
                 continue
             # Otherwise, the original and new label ROM addresses are the same, so technically no harm done. Thus,
             # record a warning and continue as normal.
             else:
-                record_l_type_redefinition_warning(parser.current_command_content, current_line,
+                record_symbol_redefinition_warning(parser.current_command_content, current_line,
                                                    current_ROM_address)
         # If no label-related errors, add the label to the symbol table.
         symbol_table.add_entry(parser.current_command_content, current_ROM_address, "ROM", current_line)
@@ -195,7 +214,3 @@ print(f"\n\n\n\n\n*************************\n\n\nSymbol Table:\n{symbol_table.sy
 
 if config.EXPORT_SYMBOL_TABLES:
     symbol_table.export_symbol_tables()
-
-
-# TODO: Export symbol tables here.
-

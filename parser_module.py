@@ -45,6 +45,7 @@ class Parser:
     regex_hex = re.compile(r'^0x|0X.*')
     regex_equ = re.compile(r'^.EQU\s.*\s.*')
     regex_post_equ_symbol = re.compile(r'\s.*')
+    regex_pre_equ_address = re.compile(r'.*\s')
 
     def __init__(self, input_file):
         """Construct the Parser object and open the given XHAL .asm input file to enable parsing of it. Then save that
@@ -69,6 +70,7 @@ class Parser:
         self.current_command_dest = None
         self.current_command_comp = None
         self.current_command_jump = None
+        self.current_command_equ_address = None
 
     def has_more_commands(self):
         """Detect if there are more commands in the XHAL .asm input file. Return true if there are, and false
@@ -130,13 +132,14 @@ class Parser:
             self.current_command_content = str(int(stripped_content, 16))
 
     def symbol(self):
-        """Return the symbol or decimal XXX of the current command, where the command is either an A_Command of the form
-        @XXX or an L_Command of the form (XXX)."""
+        """Set the symbol or decimal XXX of the current command, where the command is either an A_Command of the form
+        @XXX or an L_Command of the form (XXX). Or, if the command is an EQU directive, set both the symbol (content)
+        and the address."""
         # Gets the content (either a symbol or a decimal) of the current A L, or EQU command.
         if self.current_command_type == "EQU":
             stripped_of_equ = self.current_command.replace(".EQU ", "")
             self.current_command_content = re.sub(self.regex_post_equ_symbol, "", stripped_of_equ)
-            # TODO: Now also get address.
+            self.current_command_equ_address = re.sub(self.regex_pre_equ_address, "", stripped_of_equ)
         elif self.current_command_type == "A":
             self.current_command_content = self.current_command.replace("@", "")
         elif self.current_command_type == "L":

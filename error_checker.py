@@ -134,9 +134,9 @@ def record_c_type_jump_error(line):
                       "mnemonics.")
 
 
-def check_l_type_illegal_error(label_content, line):
+def check_illegal_symbol_error(label_content, line):
     if label_content in illegal_labels:
-        write_error(line, f"{label_content} is an illegal label name; label is in the reserved labels list.")
+        write_error(line, f"{label_content} is an illegal symbol name; label is in the reserved labels list.")
         return True
     else:
         return False
@@ -158,12 +158,12 @@ def check_l_type_text_after_paren_error(label_command, line):
         return False
 
 
-def record_l_type_redefinition_error(label_content, line, original_label_ROM_add):
-    write_error(line, f"{label_content} redefines a previously defined label as a different ROM location. The "
-                      f"original label's ROM address is {original_label_ROM_add}.")
+def record_symbol_redefinition_error(symbol, line, original_label_ROM_add):
+    write_error(line, f"{symbol} redefines a previously defined symbol as a different ROM location. The "
+                      f"original symbol's ROM address is {original_label_ROM_add}.")
 
 
-def record_l_type_redefinition_warning(label_content, line, ROM_add):
-    write_warning(line, f"{label_content} redefines a previously defined label. The ROM locations are the "
-                        f"same, but this was likely unintended. The ROM address for both labels is "
+def record_symbol_redefinition_warning(symbol, line, ROM_add):
+    write_warning(line, f"{symbol} redefines a previously defined symbol. The ROM locations are the "
+                        f"same, but this was likely unintended. The ROM address for both symbols is "
                         f"{ROM_add}.")
