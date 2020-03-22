@@ -9,6 +9,7 @@ from parser_module import Parser
 from code_module import Code
 from symbol_table_module import SymbolTable
 from error_checker import *
+import os
 
 # TODO: Encapsulate what's inside the loop into a few functions. Probably Parse(), Translate_Code(), and others?
 # TODO: Make output file also an arg?
@@ -16,8 +17,15 @@ from error_checker import *
 
 
 # Open a .hack file for writing binary text to.
-output_file = open(r"C:/Users/Robert Sirois/Dropbox/Shpob Storage/School/Compiler Design/Projects/Project One/"
-                   r"Robert_Wyckoff_PJ01_XHack/test_output_data/test.hack", "w")
+# Relative file location code from
+# https://stackoverflow.com/questions/7165749/open-file-in-a-relative-location-in-python
+file_path = os.path.abspath(__file__)
+file_dir = os.path.split(file_path)[0]
+relative_path = r"binary_output/test.hack"
+output_file_path = os.path.join(file_dir, relative_path)
+print(output_file_path)
+output_file = open(output_file_path, "w")
+
 # Create and open an error file.
 error_file = open(create_error_file(), "w")
 
@@ -57,7 +65,10 @@ while parser.has_more_commands():
     current_line += 1
     parser.advance()
     parser.command_type()
-    if parser.current_command_type == "C" or parser.current_command_type == "A":
+    if parser.current_command_type == "EQU":
+        print(f"EQU found!")
+        parser.symbol()
+    elif parser.current_command_type == "C" or parser.current_command_type == "A":
         current_ROM_address += 1
         print(f"\nCURRENT ROM ADDRESS: {current_ROM_address}, instr: {parser.current_command}")
     elif parser.current_command_type == "L":
@@ -103,7 +114,6 @@ while parser.has_more_commands():
     current_word = ""
     parser.advance()
     print(f"\nCurrent command: {parser.current_command}")
-    parser.strip_whitespace()
     parser.command_type()
     print(f"Current command type: {parser.current_command_type}")
     # If the current line starts with a //, consider it a comment and ignore it.

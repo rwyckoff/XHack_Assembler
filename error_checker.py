@@ -7,6 +7,7 @@ console and/or a generated error log, stored in the error_logs file.
 import datetime as dt
 import re
 import config
+import os
 
 # TODO: A warning about how floating-point-style symbols probably aren't meant to be symbols and may instead mean to be
 #  non-symbol address values.
@@ -48,14 +49,23 @@ def create_error_file():
     # Below lines generate a random error file name based on the current date and time.
     # Date-time formatting idea from
     # https://stackoverflow.com/questions/10501247/best-way-to-generate-random-file-names-in-python
-    error_log_path = r"C:/Users/Robert Sirois/Dropbox/Shpob Storage/School/Compiler Design/Projects/Project One/" \
-                     r"Robert_Wyckoff_PJ01_XHack/error_logs/"
+    # and relative file directory code from
+    # https://stackoverflow.com/questions/7165749/open-file-in-a-relative-location-in-python
+    # file_path = os.path.abspath(__file__)
+    # file_dir = os.path.split(file_path)[0] + r"\error_logs"
+
     base_filename = "error_log"
-    file_name_suffix = dt.datetime.now().strftime("%y%m%d_%H%M%S")
+    file_name_suffix = dt.datetime.now().strftime("%y%m%d_%H%M%S") + ".txt"
+
+    file_path = os.path.abspath(__file__)
+    file_dir = os.path.split(file_path)[0] + '/' + base_filename + file_name_suffix
+    relative_path = os.path.join("error_logs", base_filename, file_name_suffix)
 
     # Set the module-scope error output filename
     global FILENAME
-    FILENAME = "_".join([error_log_path, base_filename, file_name_suffix])
+    FILENAME = file_dir
+    # FILENAME = os.path.join(file_dir, relative_path)
+    print(FILENAME)
 
     return FILENAME
 

@@ -27,7 +27,7 @@ class Parser:
     jump: Returns the jump mnemonic in the current C_Command.
     """
 
-    # Initialize all regular expressions for the parser.
+    # Initialize all regular expressions for the parser.f
     regex_a_command = re.compile(r'^@', flags=re.MULTILINE)
 
     # TODO: Below is too specific for error handling. Keep just in case.
@@ -41,6 +41,10 @@ class Parser:
     regex_jump_pre_comp = re.compile(r';.*')
     regex_pre_jump = re.compile(r'.*;')
     regex_comment = re.compile(r'//.*')
+    regex_binary = re.compile(r'^0b|0B.*')
+    regex_hex = re.compile(r'^0x|0X.*')
+    regex_equ = re.compile(r'^.EQU\s.*\s.*')
+    regex_post_equ_symbol = re.compile(r'\s.*')
 
     def __init__(self, input_file):
         """Construct the Parser object and open the given XHAL .asm input file to enable parsing of it. Then save that
@@ -81,6 +85,10 @@ class Parser:
         self.command_idx += 1
         return self.current_command
 
+    def strip_whitespace(self):
+        """Edits the current command, stripping off any whitespace"""
+        self.current_command = self.current_command.replace(" ", "")
+
     def command_type(self):
         """Return the type of the current command. There are three possible command types that could be returned:
         A_Command: @XXX-style Address commands where XXX is either a symbol or a decimal number.
@@ -88,6 +96,12 @@ class Parser:
         L_Command: A pseudo-command in the form of (XXX), where XXX is a symbol.
         """
         # Detect the current command type and set it based on the class-level compiled regular expressions.
+        if self.regex_equ.match(self.current_command):
+            self.current_command_type = "EQU"
+            return
+        else:
+            self.strip_whitespace()     # Strip whitespace if the command type is not EQU, since we won't need it.
+
         if self.regex_comment.match(self.current_command):
             self.current_command_type = "COMMENT"
         elif self.regex_a_command.match(self.current_command):
@@ -103,16 +117,33 @@ class Parser:
         else:
             self.current_command_type = "COMMAND TYPE NOT DETECTED"  # TODO: Error detection here?
 
+    def translate_bin_hex(self):
+        """Detects if the content of the command is written in binary or hexidecimal, then translates and redefines the
+        content into decimal."""
+        if self.regex_binary.match(self.current_command_content):
+            print("Binary detected! Translating....")
+            stripped_content = self.current_command_content.replace('0b', '').replace('0B', '')
+            self.current_command_content = str(int(stripped_content, 2))
+        elif self.regex_hex.match(self.current_command_content):
+            print("Hex detected! Translating....")
+            stripped_content = self.current_command_content.replace('0x', '').replace('0X', '')
+            self.current_command_content = str(int(stripped_content, 16))
+
     def symbol(self):
         """Return the symbol or decimal XXX of the current command, where the command is either an A_Command of the form
         @XXX or an L_Command of the form (XXX)."""
-        # Gets the content (either a symbol or a decimal) of the current A or L command.
-        if self.current_command_type == "A":
+        # Gets the content (either a symbol or a decimal) of the current A L, or EQU command.
+        if self.current_command_type == "EQU":
+            stripped_of_equ = self.current_command.replace(".EQU ", "")
+            self.current_command_content = re.sub(self.regex_post_equ_symbol, "", stripped_of_equ)
+            # TODO: Now also get address.
+        elif self.current_command_type == "A":
             self.current_command_content = self.current_command.replace("@", "")
         elif self.current_command_type == "L":
             self.current_command_content = self.current_command.replace("(", "").replace(")", "")
         else:
             print("ERROR!")  # TODO: Make into a real error catch.
+        self.translate_bin_hex()
 
     def dest(self):
         """Return the dest mnemonic string (one of 8 possible) in the current C_Command. Will only be called when
@@ -151,7 +182,3 @@ class Parser:
         comment_text = self.regex_comment.search(self.current_command)
         if comment_text is not None:
             self.current_command = self.current_command.replace(comment_text[0], "")
-
-    def strip_whitespace(self):
-        """Edits the current command, stripping off any whitespace"""
-        self.current_command = self.current_command.replace(" ", "")

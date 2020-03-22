@@ -111,7 +111,7 @@ class SymbolTable:
 
     def export_symbol_tables(self):
         with open(r"C:/Users/Robert Sirois/Dropbox/Shpob Storage/School/Compiler Design/Projects/"
-                  r"Project One/Robert_Wyckoff_PJ01_XHack/symbol_tables/test.txt", "w") as file:
+                  r"Project One/Robert_Wyckoff_PJ01_XHack/symbol_tables/sym_tables.txt", "w") as file:
             h_titles = "Entry", "Address", "Line"
             header = f"RAM Symbol Table\n----------\n{h_titles[0]:<50}{h_titles[1]:<50}{h_titles[2]:<50}\n" \
                      f"------------------------------------------------------------------------------------------" \
