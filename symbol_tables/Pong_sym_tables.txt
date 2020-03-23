@@ -25,20 +25,20 @@ R14                                               14                            
 R15                                               15                                                0
 SCREEN                                            16384                                             0
 KBD                                               24576                                             0
-ponggame.0                                        16                                                4712
-math.1                                            17                                                6839
-math.0                                            18                                                6863
-memory.0                                          19                                                8847
-output.4                                          20                                                10281
-output.2                                          21                                                10293
-output.1                                          22                                                10304
-output.0                                          23                                                10313
-output.3                                          24                                                10337
-output.5                                          25                                                10404
-output.6                                          26                                                19010
-screen.1                                          27                                                20956
-screen.2                                          28                                                20968
-screen.0                                          29                                                20992
+ponggame.0                                        16                                                0
+math.1                                            17                                                0
+math.0                                            18                                                0
+memory.0                                          19                                                0
+output.4                                          20                                                0
+output.2                                          21                                                0
+output.1                                          22                                                0
+output.0                                          23                                                0
+output.3                                          24                                                0
+output.5                                          25                                                0
+output.6                                          26                                                0
+screen.1                                          27                                                0
+screen.2                                          28                                                0
+screen.0                                          29                                                0
 
 
 **********************************************************************************************************************
