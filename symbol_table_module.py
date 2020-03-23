@@ -3,7 +3,7 @@ The symbol table module exports the SymbolTable class.
 
 SymbolTable class: Keeps a correspondence between symbolic labels and numeric addresses using a dictionary.
 """
-
+import os
 
 class SymbolTable:
     """
@@ -87,7 +87,7 @@ class SymbolTable:
         self.equ_symbol_table = {}
 
     def add_entry(self, symbol, address, memory_type, line):
-        """Adds the arguments symbol and address to the symbol table as a new entry."""
+        """Add the arguments symbol and address to the symbol table as a new entry."""
         self.symbol_table[symbol] = address
         if memory_type == "ROM":
             self.rom_symbol_table[symbol] = address, line
@@ -97,7 +97,7 @@ class SymbolTable:
             self.equ_symbol_table[symbol] = address, line
 
     def contains(self, symbol):
-        """Looks in the symbol table to determine if the symbol argument is inside it. Returns true if it is and false
+        """Look in the symbol table to determine if the symbol argument is inside it. Return true if it is and false
         otherwise."""
         if symbol in self.symbol_table:
             return True
@@ -105,14 +105,15 @@ class SymbolTable:
             return False
 
     def get_address(self, symbol):
-        """Returns the int ROM address associated with the given symbol argument. Should only be called in contains()
-        had just returned true."""
+        """Return the int ROM address associated with the given symbol argument. Should only be called if contains()
+        has just returned true."""
         return self.symbol_table[symbol]
 
     def export_symbol_tables(self, io_file):
-        # TODO: Change to relative path.
-        with open(r"C:/Users/Robert Sirois/Dropbox/Shpob Storage/School/Compiler Design/Projects/"
-                  r"Project One/Robert_Wyckoff_PJ01_XHack/symbol_tables/" + io_file + "_sym_tables.txt", "w") as file:
+        """Create a text file and record RAM, ROM, and EQU symbol tables in it."""
+        file_path = os.path.abspath(__file__)
+        filename = os.path.split(file_path)[0] + '/' 'symbol_tables' + '/' + io_file + '_sym_tables.txt'
+        with open(filename, "w") as file:
             h_titles = "Entry", "Address", "Line"
             header = f"RAM Symbol Table\n----------\n{h_titles[0]:<50}{h_titles[1]:<50}{h_titles[2]:<50}\n" \
                      f"------------------------------------------------------------------------------------------" \

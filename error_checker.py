@@ -1,18 +1,10 @@
 """
-The error_checker module exports the ErrorChecker class.
-
-ErrorChecker class: Checks for various types of errors in the original XHAL code. Has options to report them to the
-console and/or a generated error log, stored in the error_logs file.
+The error_checker module provides error and warning checking functions and creates an error file for exporting.
 """
 import datetime as dt
 import re
 import config
 import os
-
-# TODO: A warning about how floating-point-style symbols probably aren't meant to be symbols and may instead mean to be
-#  non-symbol address values.
-
-# TODO: Currently only checks if jump portion is invalid OR blank. Should separate the two into two errors, ideally. Meh
 
 # Initialize a global variable to hold the error file name.
 FILENAME = "default_filename.txt"

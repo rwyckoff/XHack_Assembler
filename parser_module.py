@@ -3,11 +3,7 @@ The parser module exports the Parser class.
 
 Parser class: Opens XHAL .asm files and breaks XHAL assembly commands into their underlying fields and symbols.
 """
-import re
 from error_checker import *
-
-# TODO: Currently setting instance variables instead of returning them. Cool? May want to change descriptions.
-# TODO: When an error is encountered, report/log it and continue so that I can find all the errors in the file.
 
 
 class Parser:
@@ -25,14 +21,16 @@ class Parser:
     dest: Returns the dest mnemonic in the current C_Command.
     comp: Returns the comp mnemonic in the current C_Command.
     jump: Returns the jump mnemonic in the current C_Command.
+    strip_whitespace: Strips all whitespace out of a command.
+    command_type: Sets the type of command (comment, blank, illegal, EQU, A, C, or L)
+    translate_bin_hex: Translates binary and hexidecimal code and handles relevant errors.
+    reset_parser: Resets the index of the commands to 0. Used between passes of the assembler.
+    strip_comments: Removes comments from commands.
     """
 
-    # Initialize all regular expressions for the parser.f
+    # Initialize all regular expressions for the parser. Done at the class level so they don't have to be initialized
+    # more than once.
     regex_a_command = re.compile(r'^@', flags=re.MULTILINE)
-
-    # TODO: Below is too specific for error handling. Keep just in case.
-    # regex_c_command = re.compile(r'(^[ADM]=)|(^MD=)|(^AM=)|(^AD=)|(^AMD=)|(^null=)', flags=re.MULTILINE)
-
     regex_c_command = re.compile(r'^.+=')
     regex_c_jump_command = re.compile(r'(^.*;)')
     regex_l_command = re.compile(r'(^\().*(\))')
@@ -58,7 +56,8 @@ class Parser:
         with open(input_file, 'r') as file:
             self.command_list = file.readlines()
 
-        # Strip newlines from the command list and remove blank lines.
+        # Strip newlines from the command list. Does not remove blank lines at this time
+        # so that line numbers in error-reporting are accurate.
         self.command_list = [line.strip() for line in self.command_list]
 
         # Initialize variables.
@@ -88,14 +87,17 @@ class Parser:
         return self.current_command
 
     def strip_whitespace(self):
-        """Edits the current command, stripping off any whitespace"""
+        """Edit the current command, stripping off any whitespace"""
         self.current_command = self.current_command.replace(" ", "")
 
     def command_type(self):
-        """Return the type of the current command. There are three possible command types that could be returned:
+        """Set the type of the current command. There are three possible command types that could be returned:
         A_Command: @XXX-style Address commands where XXX is either a symbol or a decimal number.
-        C_Command: Compute commands in the form of dest=comp;jump
+        C_Command: Compute commands in the form of dest=comp;jump. Sub-types are jump and comp.
         L_Command: A pseudo-command in the form of (XXX), where XXX is a symbol.
+        BLANK: A blank command, with no content. Will be skipped over by the assembler.
+        EQU: An equate directive of the form .EQU symbol value
+        COMMENT: A line with only a comment in it. Will be skipped over by the assembler.
         """
         # Detect the current command type and set it based on the class-level compiled regular expressions.
         if not self.current_command.strip():    # If command is blank
@@ -121,26 +123,26 @@ class Parser:
         elif self.regex_l_command.match(self.current_command):
             self.current_command_type = "L"
         else:
-            self.current_command_type = "COMMAND TYPE NOT DETECTED"  # TODO: Error detection here?
+            self.current_command_type = "COMMAND TYPE NOT DETECTED"
 
     def translate_bin_hex(self, content, line):
-        """Detects if the content of the command is written in binary or hexidecimal, then translates and redefines the
-        content into decimal and returns that value."""
+        """Detect if the content of the command is written in binary or hexidecimal, then translate and redefine the
+        content into decimal and return that value."""
         if self.regex_binary.match(content):
             print("Binary detected! Translating....")
             stripped_content = content.replace('0b', '').replace('0B', '')
             try:
-                return str(int(stripped_content, 2))        # TODO: Error-check for invalid literals.
+                return str(int(stripped_content, 2))
             except ValueError:
-                record_invalid_bin_error(stripped_content, line)
+                record_invalid_bin_error(stripped_content, line)    # Record error if binary content is invalid.
                 return "ERROR"
         elif self.regex_hex.match(self.current_command_content):
             print("Hex detected! Translating....")
             stripped_content = self.current_command_content.replace('0x', '').replace('0X', '')
             try:
-                return str(int(stripped_content, 16))       # TODO: Error-check for invalid literals.
+                return str(int(stripped_content, 16))
             except ValueError:
-                record_invalid_hex_error(stripped_content, line)
+                record_invalid_hex_error(stripped_content, line)    # Record error if hex content is invalid.
                 return "ERROR"
 
         # No binary or hexadecimal is detected, so return the content unchanged.
@@ -149,8 +151,8 @@ class Parser:
 
     def symbol(self, line):
         """Set the symbol or decimal XXX of the current command, where the command is either an A_Command of the form
-        @XXX or an L_Command of the form (XXX). Or, if the command is an EQU directive, set both the symbol (content)
-        and the address."""
+        @XXX or an L_Command of the form (XXX). Or, if the command is an EQU directive, set both the symbol (label)
+        and the address (content)."""
         # Gets the content (either a symbol or a decimal) of the current A L, or EQU command.
         if self.current_command_type == "EQU":
             stripped_of_equ = self.current_command.replace(".EQU ", "")
@@ -164,7 +166,7 @@ class Parser:
             self.current_command_content = self.current_command.replace("(", "").replace(")", "")
             self.current_command_content = self.translate_bin_hex(self.current_command_content, line)
         else:
-            print("ERROR!")  # TODO: Make into a real error catch.
+            print("ERROR!")
 
     def dest(self):
         """Return the dest mnemonic string (one of 8 possible) in the current C_Command. Will only be called when
@@ -194,12 +196,12 @@ class Parser:
         self.current_command_jump = re.sub(self.regex_pre_jump, "", self.current_command)
 
     def reset_parser(self):
-        """Resets the command index of the parser so that the assembler can run through the XHAL code multiple times."""
+        """Reset the command index of the parser so that the assembler can run through the XHAL code multiple times."""
         self.command_idx = 0
         self.current_command = None
 
     def strip_comments(self):
-        """Edits the current command, stripping off any inline comments."""
+        """Edit the current command, stripping off any inline comments."""
         comment_text = self.regex_comment.search(self.current_command)
         if comment_text is not None:
             self.current_command = self.current_command.replace(comment_text[0], "")

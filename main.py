@@ -1,4 +1,9 @@
 """
+Robert Wyckoff
+CS 4100
+UCCS
+Project One -- XHASM (Extended Hack Assembler)
+
 The main XHack Assembler module drives the translation process from one XHAL file to one .hack pseudo-binary machine
 language file.
 """
@@ -11,8 +16,6 @@ from parser_module import Parser
 from symbol_table_module import SymbolTable
 
 # TODO: Encapsulate what's inside the loop into a few functions. Probably Parse(), Translate_Code(), and others?
-# TODO: Add EQU stuff to symbol table in second pass instead. Optional, but probably a good idea. Save beforehand.
-# TODO: Go back to e.asm and see if it's realistic to handle the misspelled EQU logic error.
 
 # Open a .hack file for writing binary text to.
 # Relative file location code from
@@ -169,7 +172,6 @@ while parser.has_more_commands():
                     address = symbol_table.get_address(parser.current_command_content)
                 # Otherwise the symbol table does not yet contain the current symbol, so add it and make it the address.
                 else:
-                    # TODO: Any way to detect the misspelled EQU label error?
                     symbol_table.add_entry(parser.current_command_content, current_RAM_address, "RAM",
                                            current_line)
                     current_RAM_address += 1
@@ -182,7 +184,7 @@ while parser.has_more_commands():
                 address = parser.current_command_content
             # If an error is found with translating the address field into binary or the binary code is too long,
             # record the error and skip the line.
-            if check_a_type_bin_command(address, current_line):  # TODO: Next, allow it to handle hex.
+            if check_a_type_bin_command(address, current_line):
                 continue
             # Otherwise, everything appears fine with the address field, so translate as usual.
             else:
@@ -231,9 +233,11 @@ while parser.has_more_commands():
 
 print(f"\n\n\n\n\n*************************\n\n\nSymbol Table:\n{symbol_table.symbol_table}\n\n\n***************\n\n\n")
 
+# Export symbol tables.
 if config.EXPORT_SYMBOL_TABLES:
     symbol_table.export_symbol_tables(argv[2])
 
+# Close files.
 if error_file is not None:
     error_file.close()
 output_file.close()

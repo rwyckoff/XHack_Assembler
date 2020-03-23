@@ -71,13 +71,13 @@ class Code:
         }
 
     def dest(self, dest_mnemonic):
-        """Looks up the XHAL dest mnemonic in the dest dictionary and returns the corresponding binary dest code."""
+        """Look up the XHAL dest mnemonic in the dest dictionary and return the corresponding binary dest code."""
         return self.dest_dict[dest_mnemonic]
 
     def comp(self, comp_mnemonic):
-        """Looks up the XHAL comp mnemonic in the comp dictionary and returns the corresponding binary comp code."""
+        """Look up the XHAL comp mnemonic in the comp dictionary and return the corresponding binary comp code."""
         return self.comp_dict[comp_mnemonic]
 
     def jump(self, jump_mnemonic):
-        """Looks up the XHAL jump mnemonic in the jump dictionary and returns the corresponding binary jump code."""
+        """Look up the XHAL jump mnemonic in the jump dictionary and return the corresponding binary jump code."""
         return self.jump_dict[jump_mnemonic]
