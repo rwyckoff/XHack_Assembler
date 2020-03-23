@@ -15,8 +15,6 @@ from error_checker import *
 from parser_module import Parser
 from symbol_table_module import SymbolTable
 
-# TODO: Encapsulate what's inside the loop into a few functions. Probably Parse(), Translate_Code(), and others?
-
 
 # ************************************************************************************************
 # Helper functions
