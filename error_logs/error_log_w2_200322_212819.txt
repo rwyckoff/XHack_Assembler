@@ -1,0 +1,59 @@
+
+##########
+
+ERROR, line 4: '.EQU FLAG_REG 16383 / Just before screen memory' is not a properly-formatted EQU directive.
+A properly-formatted EQU directive is like .EQU symbol value, followed by an optional comment.
+
+##########
+
+##########
+
+ERROR, line 5: 24242 redefines a previously defined symbol as a different ROM location.
+The original symbol's ROM address is 'memory'.
+
+##########
+
+!!!!!!!!!!
+
+Warning, line 21: '@16383 /* This is just before the start of SCREEN memory */' contains text that might have been meant as a comment.
+Correct XHAL comment syntax uses two forward slashes (//).
+
+!!!!!!!!!!
+
+##########
+
+ERROR, line 7: Address field in A-Type instruction is negative.
+A-Type instructions require non-negative 15-bit integers.
+
+##########
+
+##########
+
+ERROR, line 9: Address field in A-Type instruction is over 15 bits long.
+A-Type instructions require non-negative 15-bit integers.
+
+##########
+
+##########
+
+ERROR, line 10: The computation portion of C-Type instruction is either missing or is not one of the supported mnemonics.
+
+##########
+
+##########
+
+ERROR, line 12: A destination for C-Type instruction was detected, but it is not one of the supported mnemonics.
+
+##########
+
+##########
+
+ERROR, line 14: The computation portion of C-Type instruction is either missing or is not one of the supported mnemonics.
+
+##########
+
+##########
+
+ERROR, line 18: A destination for C-Type instruction was detected, but it is not one of the supported mnemonics.
+
+##########

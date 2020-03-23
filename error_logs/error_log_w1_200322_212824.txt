@@ -1,0 +1,45 @@
+
+!!!!!!!!!!
+
+Warning, line 18: '@16383 /* This is just before the start of SCREEN memory */' contains text that might have been meant as a comment.
+Correct XHAL comment syntax uses two forward slashes (//).
+
+!!!!!!!!!!
+
+##########
+
+ERROR, line 4: Address field in A-Type instruction is negative.
+A-Type instructions require non-negative 15-bit integers.
+
+##########
+
+##########
+
+ERROR, line 6: Address field in A-Type instruction is over 15 bits long.
+A-Type instructions require non-negative 15-bit integers.
+
+##########
+
+##########
+
+ERROR, line 7: The computation portion of C-Type instruction is either missing or is not one of the supported mnemonics.
+
+##########
+
+##########
+
+ERROR, line 9: A destination for C-Type instruction was detected, but it is not one of the supported mnemonics.
+
+##########
+
+##########
+
+ERROR, line 11: The computation portion of C-Type instruction is either missing or is not one of the supported mnemonics.
+
+##########
+
+##########
+
+ERROR, line 15: A destination for C-Type instruction was detected, but it is not one of the supported mnemonics.
+
+##########

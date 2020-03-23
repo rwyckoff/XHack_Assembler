@@ -4,7 +4,7 @@ The parser module exports the Parser class.
 Parser class: Opens XHAL .asm files and breaks XHAL assembly commands into their underlying fields and symbols.
 """
 import re
-
+from error_checker import *
 
 # TODO: Currently setting instance variables instead of returning them. Cool? May want to change descriptions.
 # TODO: When an error is encountered, report/log it and continue so that I can find all the errors in the file.
@@ -59,7 +59,7 @@ class Parser:
             self.command_list = file.readlines()
 
         # Strip newlines from the command list and remove blank lines.
-        self.command_list = [line.strip() for line in self.command_list if line.strip() != ""]
+        self.command_list = [line.strip() for line in self.command_list]
 
         # Initialize variables.
         self.command_idx = 0
@@ -70,7 +70,7 @@ class Parser:
         self.current_command_dest = None
         self.current_command_comp = None
         self.current_command_jump = None
-        self.current_command_equ_address = None
+        self.current_command_equ_label = None
 
     def has_more_commands(self):
         """Detect if there are more commands in the XHAL .asm input file. Return true if there are, and false
@@ -98,6 +98,10 @@ class Parser:
         L_Command: A pseudo-command in the form of (XXX), where XXX is a symbol.
         """
         # Detect the current command type and set it based on the class-level compiled regular expressions.
+        if not self.current_command.strip():    # If command is blank
+            self.current_command_type = "BLANK"
+            return
+
         if self.regex_equ.match(self.current_command):
             self.current_command_type = "EQU"
             return
@@ -119,37 +123,46 @@ class Parser:
         else:
             self.current_command_type = "COMMAND TYPE NOT DETECTED"  # TODO: Error detection here?
 
-    def translate_bin_hex(self, content):
+    def translate_bin_hex(self, content, line):
         """Detects if the content of the command is written in binary or hexidecimal, then translates and redefines the
         content into decimal and returns that value."""
         if self.regex_binary.match(content):
             print("Binary detected! Translating....")
             stripped_content = content.replace('0b', '').replace('0B', '')
-            return str(int(stripped_content, 2))
+            try:
+                return str(int(stripped_content, 2))        # TODO: Error-check for invalid literals.
+            except ValueError:
+                record_invalid_bin_error(stripped_content, line)
+                return "ERROR"
         elif self.regex_hex.match(self.current_command_content):
             print("Hex detected! Translating....")
             stripped_content = self.current_command_content.replace('0x', '').replace('0X', '')
-            return str(int(stripped_content, 16))
+            try:
+                return str(int(stripped_content, 16))       # TODO: Error-check for invalid literals.
+            except ValueError:
+                record_invalid_hex_error(stripped_content, line)
+                return "ERROR"
+
         # No binary or hexadecimal is detected, so return the content unchanged.
         else:
             return content
 
-    def symbol(self):
+    def symbol(self, line):
         """Set the symbol or decimal XXX of the current command, where the command is either an A_Command of the form
         @XXX or an L_Command of the form (XXX). Or, if the command is an EQU directive, set both the symbol (content)
         and the address."""
         # Gets the content (either a symbol or a decimal) of the current A L, or EQU command.
         if self.current_command_type == "EQU":
             stripped_of_equ = self.current_command.replace(".EQU ", "")
-            self.current_command_content = re.sub(self.regex_post_equ_symbol, "", stripped_of_equ)
-            self.current_command_equ_address = re.sub(self.regex_pre_equ_address, "", stripped_of_equ)
-            self.current_command_equ_address = self.translate_bin_hex(self.current_command_equ_address)
+            self.current_command_equ_label = re.sub(self.regex_post_equ_symbol, "", stripped_of_equ)
+            self.current_command_content = re.sub(self.regex_pre_equ_address, "", stripped_of_equ)
+            self.current_command_content = self.translate_bin_hex(self.current_command_content, line)
         elif self.current_command_type == "A":
             self.current_command_content = self.current_command.replace("@", "")
-            self.current_command_content = self.translate_bin_hex(self.current_command_content)
+            self.current_command_content = self.translate_bin_hex(self.current_command_content, line)
         elif self.current_command_type == "L":
             self.current_command_content = self.current_command.replace("(", "").replace(")", "")
-            self.current_command_content = self.translate_bin_hex(self.current_command_content)
+            self.current_command_content = self.translate_bin_hex(self.current_command_content, line)
         else:
             print("ERROR!")  # TODO: Make into a real error catch.
 

@@ -12,13 +12,14 @@ from symbol_table_module import SymbolTable
 
 # TODO: Encapsulate what's inside the loop into a few functions. Probably Parse(), Translate_Code(), and others?
 # TODO: Add EQU stuff to symbol table in second pass instead. Optional, but probably a good idea. Save beforehand.
+# TODO: Go back to e.asm and see if it's realistic to handle the misspelled EQU logic error.
 
 # Open a .hack file for writing binary text to.
 # Relative file location code from
 # https://stackoverflow.com/questions/7165749/open-file-in-a-relative-location-in-python
 file_path = os.path.abspath(__file__)
 file_dir = os.path.split(file_path)[0]
-relative_path = r"binary_output/" + argv[2] + ".hack"       # The output file name (minus the .hack) is arg 2.
+relative_path = r"binary_output/" + argv[2] + ".hack"  # The output file name (minus the .hack) is arg 2.
 output_file_path = os.path.join(file_dir, relative_path)
 print(output_file_path)
 output_file = open(output_file_path, "w")
@@ -63,28 +64,43 @@ print("\nBeginning the first pass of the assembly program....\n\n")
 while parser.has_more_commands():
     current_line += 1
     parser.advance()
+    check_comment_formatting_warning(parser.current_command, current_line)
     parser.command_type()
     if parser.current_command_type == "EQU":
-        parser.symbol()
+        check_illegal_equ_format_error(parser.current_command, current_line)
+
+        parser.symbol(current_line)
+        # If a binary or hex format error was detected, record the error and skip the line.
+        if parser.current_command_content == "ERROR":
+            continue
         # If the EQU symbol name is illegal, record the error and skip the current line.
-        if check_illegal_symbol_error(parser.current_command_content, current_line):
+        if check_illegal_symbol_error(parser.current_command_equ_label, current_line):
             continue
 
         # If the EQU symbol redefines a previously defined symbol, record either an error or a warning.
-        if symbol_table.contains(parser.current_command_content):
-            prev_label_add = symbol_table.get_address(parser.current_command_content)
+        if symbol_table.contains(parser.current_command_equ_label):
+            try:
+                prev_label_add = symbol_table.get_address(parser.current_command_content)
+            except KeyError:
+                try:
+                    prev_label_add = symbol_table.get_address(parser.current_command_equ_label)
+                except KeyError:
+                    record_symbol_key_error(parser.current_command, current_line)
+                    continue
             # If the EQU symbol redefines a previously defined symbol with a different address, record the error
             # and skip the current line.
-            if prev_label_add != parser.current_command_equ_address:
-                record_symbol_redefinition_error(parser.current_command_content, current_line, prev_label_add)
+            if prev_label_add != parser.current_command_equ_label:
+                record_symbol_redefinition_error(parser.current_command_content,
+                                                 current_line, prev_label_add)
                 continue
             # Otherwise, the original and new symbol addresses are the same, so technically no harm done. Thus,
             # record a warning and continue as normal.
             else:
                 record_symbol_redefinition_warning(parser.current_command_content, current_line,
-                                                   parser.current_command_equ_address)
+                                                   parser.current_command_equ_label)
         # If no label-related errors, add the EQU symbol to the symbol table.
-        symbol_table.add_entry(parser.current_command_content, parser.current_command_equ_address, "EQU", current_line)
+        symbol_table.add_entry(parser.current_command_equ_label, parser.current_command_content, "EQU",
+                               current_line)
 
     elif parser.current_command_type == "C" or parser.current_command_type == "A":
         current_ROM_address += 1
@@ -93,7 +109,7 @@ while parser.has_more_commands():
         if check_l_type_text_after_paren_error(parser.current_command, current_line):
             continue
         else:
-            parser.symbol()
+            parser.symbol(current_line)
 
         # If the label name is illegal, record the error and skip the current line.
         if check_illegal_symbol_error(parser.current_command_content, current_line):
@@ -114,9 +130,11 @@ while parser.has_more_commands():
                 record_symbol_redefinition_warning(parser.current_command_content, current_line,
                                                    current_ROM_address)
         # If no label-related errors, add the label to the symbol table.
-        symbol_table.add_entry(parser.current_command_content, current_ROM_address, "ROM", current_line)
+        symbol_table.add_entry(parser.current_command_content, current_ROM_address, "ROM",
+                               current_line)
 
-    elif parser.current_command_type == "ILLEGAL" or parser.current_command_type == "COMMENT":
+    elif parser.current_command_type == "ILLEGAL" or parser.current_command_type == "COMMENT" or \
+            parser.current_command_type == "BLANK":
         continue
 
 # Reset parser so it starts from the beginning of the assembly code again and reset the current line to 0.
@@ -135,11 +153,12 @@ while parser.has_more_commands():
     parser.command_type()
     print(f"Current command type: {parser.current_command_type}")
     # If the current line starts with a //, consider it a comment and ignore it.
-    if parser.current_command_type == "COMMENT" or parser.current_command_type == "EQU":
+    if parser.current_command_type == "COMMENT" or parser.current_command_type == "EQU" or \
+            parser.current_command_type == "BLANK":
         continue
     elif parser.current_command_type == "A" or parser.current_command_type == "L":
         parser.strip_comments()
-        parser.symbol()
+        parser.symbol(current_line)
         print(f"Current command content: {parser.current_command_content}")
         if parser.current_command_type == "A":
             # If the current A-command content is not a positive integer, it is a symbol, so check the symbol table.
@@ -150,7 +169,9 @@ while parser.has_more_commands():
                     address = symbol_table.get_address(parser.current_command_content)
                 # Otherwise the symbol table does not yet contain the current symbol, so add it and make it the address.
                 else:
-                    symbol_table.add_entry(parser.current_command_content, current_RAM_address, "RAM", current_line)
+                    # TODO: Any way to detect the misspelled EQU label error?
+                    symbol_table.add_entry(parser.current_command_content, current_RAM_address, "RAM",
+                                           current_line)
                     current_RAM_address += 1
                     address = symbol_table.get_address(parser.current_command_content)
 
@@ -161,7 +182,7 @@ while parser.has_more_commands():
                 address = parser.current_command_content
             # If an error is found with translating the address field into binary or the binary code is too long,
             # record the error and skip the line.
-            if check_a_type_bin_command(address, current_line): # TODO: Next, allow it to handle hex.
+            if check_a_type_bin_command(address, current_line):  # TODO: Next, allow it to handle hex.
                 continue
             # Otherwise, everything appears fine with the address field, so translate as usual.
             else:

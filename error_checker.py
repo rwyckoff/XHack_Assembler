@@ -57,7 +57,7 @@ def create_error_file(io_file):
 
     file_path = os.path.abspath(__file__)
     file_dir = os.path.split(file_path)[0] + '/' 'error_logs' + '/' + base_filename + '_' \
-        + io_file + '_' + file_name_suffix
+               + io_file + '_' + file_name_suffix
 
     # Set the module-scope error output filename
     global FILENAME
@@ -88,7 +88,7 @@ def check_a_type_int_command(command, line):
         return True
 
     if command[0] == "-":
-        write_error(line, "Address field in A-Type instruction is negative. A-Type instructions "
+        write_error(line, "Address field in A-Type instruction is negative.\nA-Type instructions "
                           "require non-negative 15-bit integers.")
         return True
     # If the function does not find an error, return false.
@@ -102,11 +102,11 @@ def check_a_type_bin_command(command, line):
         print(f"Error-checker binary code: {binary_code}")
 
         if len(binary_code) > 15:
-            write_error(line, "Address field in A-Type instruction is over 15 bits long. A-Type instructions "
+            write_error(line, "Address field in A-Type instruction is over 15 bits long.\nA-Type instructions "
                               "require non-negative 15-bit integers.")
             return True
     except ValueError:
-        write_error(line, "Address field in A-Type instruction is not translatable to binary. A-Type "
+        write_error(line, "Address field in A-Type instruction is not translatable to binary.\nA-Type "
                           "instructions require non-negative 15-bit integers.")
         return True
 
@@ -154,11 +154,38 @@ def check_l_type_text_after_paren_error(label_command, line):
 
 
 def record_symbol_redefinition_error(symbol, line, original_label_ROM_add):
-    write_error(line, f"{symbol} redefines a previously defined symbol as a different ROM location. The "
-                      f"original symbol's ROM address is {original_label_ROM_add}.")
+    write_error(line, f"{symbol} redefines a previously defined symbol as a different ROM location.\nThe "
+                      f"original symbol's ROM address is '{original_label_ROM_add}'.")
 
 
 def record_symbol_redefinition_warning(symbol, line, ROM_add):
     write_warning(line, f"{symbol} redefines a previously defined symbol. The ROM locations are the "
-                        f"same, but this was likely unintended. The ROM address for both symbols is "
+                        f"same, but this was likely unintended.\nThe ROM address for both symbols is "
                         f"{ROM_add}.")
+
+
+def check_comment_formatting_warning(content, line):
+    regex_common_comments = re.compile(r'#\s.+|/\*\s.+|\*\\|<!--')
+    if regex_common_comments.search(content):
+        write_warning(line, f"'{content}' contains text that might have been meant as a comment.\nCorrect XHAL comment "
+                            f"syntax uses two forward slashes (//).")
+
+
+def record_symbol_key_error(command, line):
+    write_error(line, f"Symbol not found in symbol table. '{command}' requires a valid entry in the symbol table.")
+
+
+def check_illegal_equ_format_error(command, line):
+    # Proper format is like .EQU symbol value, with optional whitespace and/or comments afterward.
+    regex_proper_equ = re.compile(r'^.EQU\s\S*\s\d*(?:\s+//.*|$|\s+)')
+    if not regex_proper_equ.fullmatch(command):
+        write_error(line, f"'{command}' is not a properly-formatted EQU directive.\nA properly-formatted EQU directive "
+                          f"is like .EQU symbol value, followed by an optional comment.")
+
+
+def record_invalid_bin_error(content, line):
+    write_error(line, f"'{content}' contains improper binary content.")
+
+
+def record_invalid_hex_error(content, line):
+    write_error(line, f"'{content}' contains improper hexadecimal content.")
